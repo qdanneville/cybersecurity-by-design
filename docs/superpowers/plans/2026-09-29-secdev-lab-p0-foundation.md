@@ -1425,7 +1425,13 @@ cd app && DATABASE_URL=postgres://shop:shop@localhost:5432/shop npx vitest run t
 ```
 Expected: search-injection test fails; sort test's first assertion fails (200 not 400).
 
-- [ ] **Step 4: Author fixes, capture two patches, revert**
+- [ ] **Step 4: Author the fix, capture ONE combined patch, revert**
+
+Implemented as a single `solutions/m2-sqli.patch` (two tests, one patch):
+both fixes live in the same `/search` handler on adjacent lines, so two
+separately-captured patches share diff context and cannot both apply to the
+vulnerable baseline — which would break the Task 15 "apply all patches" gate.
+The two tests still teach the two distinct lessons.
 
 Fix (parameterize `q`; allow-list `sort`):
 ```ts
