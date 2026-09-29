@@ -4,6 +4,7 @@ import { ordersRouter } from './modules/orders/orders.routes.js'
 import { usersRouter } from './modules/users/users.routes.js'
 import { adminRouter } from './modules/admin/admin.routes.js'
 import { productsRouter } from './modules/products/products.routes.js'
+import { couponsRouter } from './modules/coupons/coupons.routes.js'
 import { errorHandler } from './middleware/errors.js'
 
 export function createApp(): Express {
@@ -15,6 +16,7 @@ export function createApp(): Express {
   app.use('/api/users', usersRouter)
   app.use('/api/admin', adminRouter)
   app.use('/api/products', productsRouter)
+  app.use('/api/coupons', couponsRouter)
   app.use(errorHandler)
   return app
 }

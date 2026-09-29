@@ -1,0 +1,21 @@
+diff --git a/app/src/modules/products/products.routes.ts b/app/src/modules/products/products.routes.ts
+index aaaac34..3f266d6 100644
+--- a/app/src/modules/products/products.routes.ts
++++ b/app/src/modules/products/products.routes.ts
+@@ -31,10 +31,14 @@ productsRouter.post('/:id/reviews', requireAuth, async (req, res) => {
+   res.status(201).json({ ok: true })
+ })
+ 
+-// VULNERABLE (M2 stored XSS): body concatenated into HTML with no escaping.
++function esc(s: string): string {
++  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
++}
++
+ productsRouter.get('/:id/reviews.html', async (req, res) => {
+   const productId = Number(req.params.id)
+   const rows = await db.select().from(schema.reviews).where(eq(schema.reviews.productId, productId))
+-  const html = rows.map((r) => `<li>${r.body}</li>`).join('')
++  // Fix: escape user content before interpolating into HTML.
++  const html = rows.map((r) => `<li>${esc(r.body)}</li>`).join('')
+   res.type('html').send(`<ul>${html}</ul>`)
+ })

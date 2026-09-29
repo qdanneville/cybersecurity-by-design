@@ -1,0 +1,14 @@
+diff --git a/app/src/lib/merge.ts b/app/src/lib/merge.ts
+index 013e408..7968467 100644
+--- a/app/src/lib/merge.ts
++++ b/app/src/lib/merge.ts
+@@ -1,6 +1,8 @@
+-// VULNERABLE (M2 prototype pollution): recurses into __proto__ / constructor.
++const FORBIDDEN = new Set(['__proto__', 'constructor', 'prototype'])
++
+ export function deepMerge(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
+   for (const key of Object.keys(source)) {
++    if (FORBIDDEN.has(key)) continue // Fix: never merge prototype-polluting keys.
+     const sv = source[key]
+     if (sv && typeof sv === 'object' && !Array.isArray(sv)) {
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
