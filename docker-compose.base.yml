@@ -1,0 +1,25 @@
+name: secdev-lab
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
+      POSTGRES_DB: shop
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+  app:
+    build: ./app
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://shop:shop@postgres:5432/shop
+      REDIS_URL: redis://redis:6379
+    ports: ["3000:3000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
