@@ -1,0 +1,17 @@
+diff --git a/app/src/modules/users/users.routes.ts b/app/src/modules/users/users.routes.ts
+index 4be9fb8..3758eee 100644
+--- a/app/src/modules/users/users.routes.ts
++++ b/app/src/modules/users/users.routes.ts
+@@ -14,8 +14,10 @@ usersRouter.patch('/me', requireAuth, async (req, res) => {
+   res.json(updated[0])
+ })
+ 
+-// VULNERABLE (M1 over-fetch): select().from(users) returns passwordHash in JSON.
+ usersRouter.get('/', requireAuth, requireRole('ADMIN'), async (_req, res) => {
+-  const rows = await db.select().from(schema.users)
++  // Fix: select explicit columns; never ship passwordHash.
++  const rows = await db.select({
++    id: schema.users.id, email: schema.users.email, name: schema.users.name, role: schema.users.role,
++  }).from(schema.users)
+   res.json(rows)
+ })
