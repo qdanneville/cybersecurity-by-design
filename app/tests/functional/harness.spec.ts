@@ -9,6 +9,8 @@ describe('harness', () => {
     expect(alice.auth.Authorization).toMatch(/^Bearer /)
   })
 
-  // Enabled in Task 10 once the orders router is mounted (before that the path 404s).
-  it.todo('rejects a missing Authorization header with 401')
+  it('rejects a missing Authorization header with 401', async () => {
+    const res = await app.get('/api/orders/1')
+    expect(res.status).toBe(401)
+  })
 })
