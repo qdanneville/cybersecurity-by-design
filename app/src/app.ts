@@ -3,6 +3,7 @@ import { authRouter } from './modules/auth/auth.routes.js'
 import { ordersRouter } from './modules/orders/orders.routes.js'
 import { usersRouter } from './modules/users/users.routes.js'
 import { adminRouter } from './modules/admin/admin.routes.js'
+import { productsRouter } from './modules/products/products.routes.js'
 import { errorHandler } from './middleware/errors.js'
 
 export function createApp(): Express {
@@ -13,7 +14,7 @@ export function createApp(): Express {
   app.use('/api/orders', ordersRouter)
   app.use('/api/users', usersRouter)
   app.use('/api/admin', adminRouter)
-  // Further module routers are mounted here by later tasks (products).
+  app.use('/api/products', productsRouter)
   app.use(errorHandler)
   return app
 }

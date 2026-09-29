@@ -1,0 +1,26 @@
+diff --git a/app/src/lib/http-client.ts b/app/src/lib/http-client.ts
+index 12811f8..6ffa344 100644
+--- a/app/src/lib/http-client.ts
++++ b/app/src/lib/http-client.ts
+@@ -1,5 +1,19 @@
+-// Thin wrapper so the SSRF fix (allow-list) lives in one place.
++import { lookup } from 'node:dns/promises'
++import net from 'node:net'
++
++const ALLOWED_HOSTS = new Set(['images.example.com'])
++
++function isPrivate(ip: string): boolean {
++  return /^(10\.|127\.|169\.254\.|192\.168\.|::1|fc|fd)/.test(ip) ||
++    /^172\.(1[6-9]|2\d|3[01])\./.test(ip)
++}
++
++// Fix: only https to an allow-listed host that does not resolve to a private range.
+ export async function fetchImage(url: string): Promise<{ status: number; contentType: string | null }> {
+-  const res = await fetch(url, { redirect: 'follow' })
++  const u = new URL(url)
++  if (u.protocol !== 'https:' || !ALLOWED_HOSTS.has(u.hostname)) throw Object.assign(new Error('blocked'), { status: 400 })
++  const { address } = await lookup(u.hostname)
++  if (net.isIP(address) && isPrivate(address)) throw Object.assign(new Error('blocked'), { status: 400 })
++  const res = await fetch(url, { redirect: 'error' })
+   return { status: res.status, contentType: res.headers.get('content-type') }
+ }
