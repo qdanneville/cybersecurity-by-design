@@ -1,0 +1,20 @@
+diff --git a/app/src/lib/pdf.ts b/app/src/lib/pdf.ts
+index ff84ead..77b0bf2 100644
+--- a/app/src/lib/pdf.ts
++++ b/app/src/lib/pdf.ts
+@@ -1,10 +1,9 @@
+-import { exec } from 'node:child_process'
++import { execFile } from 'node:child_process'
+ import { promisify } from 'node:util'
+-const run = promisify(exec)
++const run = promisify(execFile)
+ 
+-// VULNERABLE (M2 command injection): title interpolated into a shell command.
++// Fix: execFile with argv — no shell, so title can never be interpreted as a command.
+ export async function renderInvoicePdf(title: string): Promise<string> {
+-  // In the lab wkhtmltopdf may be absent; the injection is provable via the echo side-effect.
+-  const { stdout } = await run(`echo "rendering ${title}" && echo done`)
+-  return stdout
++  const { stdout } = await run('echo', [`rendering ${title}`])
++  return stdout + 'done\n'
+ }
