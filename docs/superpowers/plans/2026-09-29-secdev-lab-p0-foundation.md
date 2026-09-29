@@ -853,9 +853,18 @@ FAIL=0
 command -v docker >/dev/null && ok "docker présent" || ko "docker manquant"
 docker info >/dev/null 2>&1 && ok "docker actif" || ko "docker daemon arrêté"
 node -v 2>/dev/null | grep -qE 'v(2[2-9]|[3-9][0-9])' && ok "node >= 22" || ko "node >= 22 requis"
-# Free RAM, not total (architecture §5). macOS + Linux.
-if command -v free >/dev/null; then FREE_MB=$(free -m | awk '/^Mem:/{print $7}');
-else FREE_MB=$(( $(vm_stat | awk '/free/{gsub(/\./,"",$3);print $3}') * 4096 / 1024 / 1024 )); fi
+# Available RAM (not total; architecture §5). Linux: MemAvailable via free.
+# macOS: free + inactive + speculative + purgeable pages ≈ what the OS can hand out.
+# (Pages-free alone is misleadingly low on macOS and would fail on every Mac.)
+if command -v free >/dev/null; then
+  FREE_MB=$(free -m | awk '/^Mem:/{print $7}')
+else
+  PS=$(vm_stat)
+  PGSIZE=$(echo "$PS" | sed -n 's/.*page size of \([0-9]*\) bytes.*/\1/p'); PGSIZE=${PGSIZE:-4096}
+  pages(){ echo "$PS" | awk -v k="$1" 'index($0,k){gsub(/\./,"",$NF); print $NF+0}'; }
+  FREE_MB=$(( ( $(pages "Pages free:") + $(pages "Pages inactive:") \
+    + $(pages "Pages speculative:") + $(pages "Pages purgeable:") ) * PGSIZE / 1024 / 1024 ))
+fi
 [ "${FREE_MB:-0}" -ge 3000 ] && ok "RAM libre ${FREE_MB} Mo" || ko "RAM libre ${FREE_MB} Mo (<3 Go, 16 Go conseillés)"
 for p in 3000 5432 6379; do
   (lsof -iTCP:$p -sTCP:LISTEN >/dev/null 2>&1) && ko "port $p occupé" || ok "port $p libre"
@@ -867,7 +876,6 @@ exit $FAIL
 
 ```makefile
 COMPOSE := docker compose -f docker-compose.base.yml
-OVERLAY := $(if $(M),-f labs/$(M)-*/overlay.yml,)
 
 .PHONY: check up down reset test solution hint
 
@@ -876,7 +884,10 @@ check:
 
 up:
 	@test -n "$(M)" || (echo "usage: make up M=m1"; exit 1)
-	$(COMPOSE) $(wildcard labs/$(M)-*/overlay.yml:%=-f %) up -d --build
+	@overlay=$$(ls labs/$(M)-*/overlay.yml 2>/dev/null | head -1); \
+	 args="-f docker-compose.base.yml"; \
+	 if [ -n "$$overlay" ]; then args="$$args -f $$overlay"; echo "overlay: $$overlay"; fi; \
+	 docker compose $$args up -d --build
 
 down:
 	$(COMPOSE) down -v
@@ -892,14 +903,18 @@ test:
 solution:
 	@test -n "$(M)" || (echo "usage: make solution M=m1-idor"; exit 1)
 	@test -f solutions/$(M).patch || (echo "no patch solutions/$(M).patch"; exit 1)
-	git apply --check solutions/$(M).patch \
+	@git apply --check solutions/$(M).patch \
 	  || (echo "patch n'applique pas (déjà appliqué ? code modifié ?)"; exit 1)
-	git apply solutions/$(M).patch && echo "patch $(M) appliqué"
+	@git apply solutions/$(M).patch && echo "patch $(M) appliqué"
 
 hint:
 	@test -n "$(M)" || (echo "usage: make hint M=m1-idor"; exit 1)
 	@bash tools/hint.sh $(M)
 ```
+
+Note: the overlay is resolved with a shell glob at run time (an in-recipe
+`$(wildcard …:%=-f %)` expression does not perform the `-f` substitution and
+silently drops overlays).
 
 - [ ] **Step 3: Write `tools/hint.sh` and a seed hint file**
 
