@@ -1,10 +1,10 @@
 diff --git a/app/src/modules/orders/orders.routes.ts b/app/src/modules/orders/orders.routes.ts
-index f691ca1..ce156dd 100644
+index c757c21..6a589ce 100644
 --- a/app/src/modules/orders/orders.routes.ts
 +++ b/app/src/modules/orders/orders.routes.ts
-@@ -5,11 +5,11 @@ import { requireAuth } from '../../middleware/auth.js'
- 
- export const ordersRouter = Router()
+@@ -12,11 +12,11 @@ ordersRouter.get('/invoices/:id.pdf', requireAuth, async (req, res) => {
+   res.type('text/plain').send(out)
+ })
  
 -// VULNERABLE (M1 IDOR): returns any order by id, no ownership check.
  ordersRouter.get('/:id', requireAuth, async (req, res) => {
