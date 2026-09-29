@@ -1,0 +1,2 @@
+# M1 needs no extra service; base stack suffices. File kept so `make up M=m1` is uniform.
+services: {}
