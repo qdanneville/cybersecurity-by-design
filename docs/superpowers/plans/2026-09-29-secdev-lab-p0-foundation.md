@@ -493,7 +493,7 @@ export function signToken(payload: Claims): string {
 }
 
 export function verifyToken(token: string): Claims {
-  return jwt.verify(token, SECRET) as Claims
+  return jwt.verify(token, SECRET) as unknown as Claims
 }
 ```
 
@@ -544,16 +544,19 @@ import { Router } from 'express'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '../../db/index.js'
 import { signToken } from '../../lib/jwt.js'
-import { SEED_PASSWORD_HASH } from '../../db/seed.js'
+import { SEED_PASSWORD, SEED_PASSWORD_HASH } from '../../db/seed.js'
 
 export const authRouter = Router()
 
-// P0 login: compares against the seed marker hash. Real password verification is M3/M5.
+// P0 login: all seeded users share one marker hash / password. Real per-user
+// password hashing (and its weaknesses) arrive in M5; enumeration nuance in M3.
+// NOTE: `password` MUST be checked here — omitting it makes login accept any
+// password, which also breaks the M3 enumeration lesson.
 authRouter.post('/login', async (req, res) => {
-  const { email } = req.body ?? {}
+  const { email, password } = req.body ?? {}
   const rows = await db.select().from(schema.users).where(eq(schema.users.email, email))
   const user = rows[0]
-  if (!user || user.passwordHash !== SEED_PASSWORD_HASH) {
+  if (!user || user.passwordHash !== SEED_PASSWORD_HASH || password !== SEED_PASSWORD) {
     res.status(401).json({ error: 'invalid credentials' })
     return
   }
