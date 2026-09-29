@@ -1,0 +1,23 @@
+diff --git a/app/src/modules/products/products.routes.ts b/app/src/modules/products/products.routes.ts
+index 634c71a..86c25fc 100644
+--- a/app/src/modules/products/products.routes.ts
++++ b/app/src/modules/products/products.routes.ts
+@@ -6,12 +6,16 @@ import { fetchImage } from '../../lib/http-client.js'
+ 
+ export const productsRouter = Router()
+ 
+-// VULNERABLE (M2): q interpolated with sql.raw; sort interpolated into ORDER BY.
++const ALLOWED_SORT = new Set(['name', 'price_cents'])
++
++// Fix (M2): q is bound as a parameter via the sql template tag; sort is
++// allow-listed (a column identifier can never be a bound parameter).
+ productsRouter.get('/search', async (req, res) => {
+   const q = String(req.query.q ?? '')
+   const sort = String(req.query.sort ?? 'name')
++  if (!ALLOWED_SORT.has(sort)) { res.status(400).json({ error: 'invalid sort' }); return }
+   const rows = await db.execute(
+-    sql.raw(`SELECT id, name, price_cents FROM products WHERE name LIKE '%${q}%' ORDER BY ${sort}`),
++    sql`SELECT id, name, price_cents FROM products WHERE name LIKE ${'%' + q + '%'} ORDER BY ${sql.raw(sort)}`,
+   )
+   res.json(rows.rows)
+ })
