@@ -26,13 +26,17 @@ make up M=m1             # démarre l'appli + la base, et charge les données
 
 Attends « `seed complete` ». L'appli répond sur **http://localhost:3000**.
 
-Colle ces 2 lignes dans ton terminal (elles te font gagner du temps ensuite) :
+Colle ce bloc dans ton terminal (il te fait gagner du temps ensuite) :
 
 ```bash
+setopt interactive_comments 2>/dev/null
 export B=http://localhost:3000
+PW='Password123!'
 login() { curl -s -X POST $B/api/auth/login -H 'content-type: application/json' \
-  -d "{\"email\":\"$1\",\"password\":\"Password123!\"}" | jq -r .token; }
+  -d "{\"email\":\"$1\",\"password\":\"$PW\"}" | jq -r .token; }
 ```
+
+> 🛠️ **Sous zsh (macOS)** ces 2 pièges sont déjà évités par ce bloc : le `!` du mot de passe est mis entre *quotes simples* (sinon : `zsh: event not found`), et la 1ʳᵉ ligne autorise les commentaires `#` quand on colle du code (sinon : `zsh: bad pattern`). Si tu ouvres un nouveau terminal, **recolle le bloc**.
 
 **Les comptes** (mot de passe pour tous : `Password123!`)
 
