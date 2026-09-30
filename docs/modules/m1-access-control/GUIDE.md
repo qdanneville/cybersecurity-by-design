@@ -54,7 +54,9 @@ ALICE=$(login alice@example.com); echo ${ALICE:0:30}...
 ```
 → tu dois voir `eyJhbGciOiJIUzI1NiIsInR5cCI6...` (c'est un *token* JWT : ton badge d'accès).
 
-> 💡 Colle ton token sur https://jwt.io pour lire ce qu'il contient : `sub` (ton id), `email`, **`role`**. Garde ce dernier en tête pour la faille 4.
+> ℹ️ `${ALICE:0:30}` n'affiche que les **30 premiers caractères**, pour avoir un aperçu court. La variable `$ALICE` contient bien le token **complet** (c'est elle que les commandes suivantes utilisent). Ne copie pas cet aperçu tronqué.
+
+> 💡 Pour lire le contenu du token, affiche-le en entier avec `echo $ALICE` (sur Mac : `echo $ALICE | pbcopy` le copie directement), puis colle-le sur https://jwt.io. Tu y verras `sub` (ton id), `email`, **`role`**. Garde ce dernier en tête pour la faille 4.
 
 **Les commandes utiles pendant tout le module**
 
