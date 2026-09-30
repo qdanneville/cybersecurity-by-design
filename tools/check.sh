@@ -4,6 +4,8 @@ ok(){ printf "\033[32m✓ %s\033[0m\n" "$1"; }
 ko(){ printf "\033[31m✗ %s\033[0m\n" "$1"; FAIL=1; }
 FAIL=0
 command -v docker >/dev/null && ok "docker présent" || ko "docker manquant"
+command -v curl >/dev/null && ok "curl présent" || ko "curl manquant"
+command -v jq >/dev/null && ok "jq présent" || ko "jq manquant (brew install jq / apt install jq)"
 docker info >/dev/null 2>&1 && ok "docker actif" || ko "docker daemon arrêté"
 node -v 2>/dev/null | grep -qE 'v(2[2-9]|[3-9][0-9])' && ok "node >= 22" || ko "node >= 22 requis"
 # Available RAM (not total; architecture §5). Linux: MemAvailable via free.

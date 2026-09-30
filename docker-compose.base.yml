@@ -19,6 +19,11 @@ services:
     environment:
       DATABASE_URL: postgres://shop:shop@postgres:5432/shop
       REDIS_URL: redis://redis:6379
+    # Bind-mount the code so the learner's edits on the host are what runs
+    # (tsx watch reloads the server) and what `make test` checks.
+    volumes:
+      - ./app/src:/app/src
+      - ./app/tests:/app/tests
     ports: ["3000:3000"]
     depends_on:
       postgres: { condition: service_healthy }
